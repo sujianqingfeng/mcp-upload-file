@@ -1,33 +1,41 @@
 {
-  "name": "mcp-upload-file",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "preview": "node dist/index.js",
-    "test": "vitest",
-    "build:tsc": "tsc"
-  },
-  "keywords": [
-    "mcp",
-    "apifox"
-  ],
-  "author": "hens",
-  "license": "ISC",
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@types/node": "^22.13.4",
-    "cross-env": "^7.0.3",
-    "tsup": "^8.3.6",
-    "typescript": "^5.7.3",
-    "vitest": "^3.0.6"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.5.0",
-    "undici": "^7.3.0",
-    "zod": "^3.24.2"
-  }
+	"name": "mcp-upload-file",
+	"version": "1.0.0",
+	"bin": "dist/index.js",
+	"description": "",
+	"type": "module",
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": "./dist/index.js"
+	},
+	"files": [
+		"dist",
+    "*.d.ts"
+	],
+	"scripts": {
+		"build": "tsup",
+		"publish": "npm publish --no-git-checks --access public",
+		"dev": "tsup --watch",
+		"preview": "node dist/index.js",
+		"test": "vitest",
+		"build:tsc": "tsc"
+	},
+	"keywords": ["mcp", "upload file"],
+	"author": "hens",
+	"license": "ISC",
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@types/node": "^22.13.4",
+		"cross-env": "^7.0.3",
+		"tsup": "^8.3.6",
+		"typescript": "^5.7.3",
+		"vitest": "^3.0.6"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.5.0",
+		"undici": "^7.3.0",
+		"zod": "^3.24.2"
+	}
 }
