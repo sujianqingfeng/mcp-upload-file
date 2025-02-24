@@ -1,7 +1,9 @@
 {
 	"name": "mcp-upload-file",
 	"version": "1.0.0",
-	"bin": "dist/index.js",
+	"bin": {
+		"mcp-upload-file": "dist/index.js"
+	},
 	"description": "",
 	"type": "module",
 	"main": "dist/index.js",
@@ -16,6 +18,7 @@
 	],
 	"scripts": {
 		"build": "tsup",
+		"prepublishOnly": "npm run build",
 		"publish": "npm publish --no-git-checks --access public",
 		"dev": "tsup --watch",
 		"preview": "node dist/index.js",
