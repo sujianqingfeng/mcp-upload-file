@@ -4,7 +4,11 @@
 	"bin": {
 		"mcp-upload-file": "dist/index.js"
 	},
-	"description": "",
+	"description": "mcp upload file",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sujianqingfeng/mcp-upload-file.git"
+  },
 	"type": "module",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
