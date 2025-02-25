@@ -23,7 +23,7 @@
 	"scripts": {
 		"build": "tsup",
 		"prepublishOnly": "npm run build",
-		"publish": "npm publish --no-git-checks --access public",
+		"publish": "npm publish --no-git-checks --access public --registry https://registry.npmjs.org/",
 		"dev": "tsup --watch",
 		"preview": "node dist/index.js",
 		"test": "vitest",
