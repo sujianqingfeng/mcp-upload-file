@@ -1,6 +1,6 @@
 {
 	"name": "mcp-upload-file",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"bin": {
 		"mcp-upload-file": "dist/index.js"
 	},
@@ -22,7 +22,7 @@
 	],
 	"scripts": {
 		"build": "tsup",
-		"publish": "npm publish --no-git-checks --access public --registry https://registry.npmjs.org/",
+		"release": "npm publish --no-git-checks --access public --registry https://registry.npmjs.org/",
 		"dev": "tsup --watch",
 		"preview": "node dist/index.js",
 		"test": "vitest",
