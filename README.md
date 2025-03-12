@@ -10,9 +10,9 @@
 {
   "mcpServers": {
     "upload-file": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "path/to/mcp-upload-file/dist/index.js"
+        "mcp-upload-file@latest"
       ],
       "env": {
         "UPLOAD_URL": "",        // 文件上传的目标 URL
