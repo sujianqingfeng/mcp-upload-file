@@ -12,6 +12,7 @@
     "upload-file": {
       "command": "npx",
       "args": [
+        "-y",
         "mcp-upload-file@latest"
       ],
       "env": {

@@ -6,8 +6,8 @@ import { FormData, request } from "undici"
 import { z } from "zod"
 
 const server = new McpServer({
-	name: "apifox",
-	version: "0.0.1",
+	name: "upload-file",
+	version: "1.0.5",
 })
 
 server.tool(
