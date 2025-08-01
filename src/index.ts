@@ -5,20 +5,17 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { FormData, request } from "undici"
 import { z } from "zod"
 import fs from "node:fs"
+import { createRequire } from "node:module"
+
+const require = createRequire(import.meta.url)
+const { version: pkgVersion } = require("../package.json") as { version: string }
 
 const server = new McpServer({
 	name: "upload-file",
-	version: "1.0.6",
+	version: pkgVersion,
 })
 
-server.tool(
-	"upload-file",
-	"upload file from a url or local file path",
-	{
-		source: z.string().describe("url or local file path"),
-		fileName: z.string().describe("The file name (must be in English)"),
-	},
-	async ({ source, fileName }) => {
+async function uploadFileHandler({ source, fileName }: { source: string; fileName: string }) {
 		if (
 			!process.env.UPLOAD_URL ||
 			!process.env.FILE_KEY ||
@@ -37,22 +34,36 @@ server.tool(
 		let blob: Buffer
 
 		if (source.startsWith("http://") || source.startsWith("https://")) {
-			// Fetch the file from url
+			// Fetch the file from URL
 			const response = await request(source)
 			blob = Buffer.from(await response.body.arrayBuffer())
 		} else {
-			// Read from local file path
-			if (!fs.existsSync(source)) {
+			let filePath = source
+
+			// Handle file URI scheme (e.g., "file:///path/to/file")
+			if (source.startsWith("file://")) {
+				try {
+					// Decode URI components to support spaces and non-ASCII characters
+					filePath = decodeURIComponent(new URL(source).pathname)
+				} catch {
+					// Fallback: strip the scheme manually
+					filePath = source.replace(/^file:\/\//, "")
+				}
+			}
+
+			// Read from local file system
+			if (!fs.existsSync(filePath)) {
 				return {
 					content: [
 						{
 							type: "text",
-							text: `File not found at path: ${source}`,
+							text: `File not found at path: ${filePath}`,
 						},
 					],
 				}
 			}
-			blob = fs.readFileSync(source)
+
+			blob = fs.readFileSync(filePath)
 		}
 
 		// Prepare form data
@@ -91,7 +102,16 @@ server.tool(
 				},
 			],
 		}
+	}
+
+server.tool(
+	"upload-file",
+	"upload file from a url or local file path",
+	{
+		source: z.string().describe("url or local file path"),
+		fileName: z.string().describe("The file name (must be in English)"),
 	},
+	uploadFileHandler as any,
 )
 
 async function main() {
@@ -100,7 +120,12 @@ async function main() {
 	console.error("Upload file MCP Server running on stdio")
 }
 
-main().catch((error) => {
-	console.error("Fatal error in main():", error)
-	process.exit(1)
-})
+// Only run main when not in a test environment
+if (!process.env.SKIP_MCP_MAIN) {
+	main().catch((error) => {
+		console.error("Fatal error in main():", error)
+		process.exit(1)
+	})
+}
+
+export { server, uploadFileHandler }
