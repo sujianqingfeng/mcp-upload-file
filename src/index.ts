@@ -68,7 +68,9 @@ async function uploadFileHandler({ source, fileName }: { source: string; fileNam
 
 		// Prepare form data
 		const form = new FormData()
-		form.append(process.env.FILE_KEY, blob, fileName)
+		// Convert Buffer to Blob for FormData compatibility
+		const fileBlob = new Blob([blob])
+		form.append(process.env.FILE_KEY, fileBlob, fileName)
 		form.append(process.env.FILE_NAME, fileName)
 
 		// Parse and add extra form fields if provided

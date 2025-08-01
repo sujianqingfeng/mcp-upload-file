@@ -1,6 +1,6 @@
 {
 	"name": "mcp-upload-file",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"bin": {
 		"mcp-upload-file": "dist/index.js"
 	},
