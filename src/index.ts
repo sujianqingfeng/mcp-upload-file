@@ -4,20 +4,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { FormData, request } from "undici"
 import { z } from "zod"
+import fs from "node:fs"
 
 const server = new McpServer({
 	name: "upload-file",
-	version: "1.0.5",
+	version: "1.0.6",
 })
 
 server.tool(
 	"upload-file",
-	"upload file by url",
+	"upload file from a url or local file path",
 	{
-		url: z.string().describe("url"),
-		fileName: z.string().describe("filename"),
+		source: z.string().describe("url or local file path"),
+		fileName: z.string().describe("The file name (must be in English)"),
 	},
-	async ({ url, fileName }) => {
+	async ({ source, fileName }) => {
 		if (
 			!process.env.UPLOAD_URL ||
 			!process.env.FILE_KEY ||
@@ -33,9 +34,26 @@ server.tool(
 			}
 		}
 
-		// Fetch the file from url
-		const response = await request(url)
-		const blob = Buffer.from(await response.body.arrayBuffer())
+		let blob: Buffer
+
+		if (source.startsWith("http://") || source.startsWith("https://")) {
+			// Fetch the file from url
+			const response = await request(source)
+			blob = Buffer.from(await response.body.arrayBuffer())
+		} else {
+			// Read from local file path
+			if (!fs.existsSync(source)) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `File not found at path: ${source}`,
+						},
+					],
+				}
+			}
+			blob = fs.readFileSync(source)
+		}
 
 		// Prepare form data
 		const form = new FormData()
