@@ -57,7 +57,7 @@ server.tool(
 
 		// Prepare form data
 		const form = new FormData()
-		form.append(process.env.FILE_KEY, new Blob([blob]), fileName)
+		form.append(process.env.FILE_KEY, blob, fileName)
 		form.append(process.env.FILE_NAME, fileName)
 
 		// Parse and add extra form fields if provided
