@@ -2,11 +2,18 @@ import { defineConfig } from "tsup"
 
 export default defineConfig({
 	entry: ["src/index.ts"],
-	format: ["esm"], // 同时输出 CommonJS 和 ESM 格式
-	dts: true, // 生成类型声明文件
+	format: ["esm"],
+	dts: true,
 	splitting: false,
 	sourcemap: false,
-	clean: true, // 每次构建前清理输出目录
-	minify: false, // 不压缩代码，方便调试
+	clean: true,
+	minify: false,
 	outDir: "dist",
+	// Ensure all dependencies are bundled properly
+	noExternal: ["zod", "zod-to-json-schema"],
+	// Bundle all dependencies to avoid module resolution issues
+	bundle: true,
+	// Ensure proper platform compatibility
+	platform: "node",
+	target: "node18",
 })

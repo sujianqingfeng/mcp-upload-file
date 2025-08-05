@@ -1,6 +1,6 @@
 {
 	"name": "mcp-upload-file",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"bin": {
 		"mcp-upload-file": "dist/index.js"
 	},
@@ -37,6 +37,7 @@
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.7.0",
 		"undici": "^7.3.0",
-		"zod": "^3.24.2"
+		"zod": "^3.24.2",
+		"zod-to-json-schema": "^3.24.2"
 	}
 }
