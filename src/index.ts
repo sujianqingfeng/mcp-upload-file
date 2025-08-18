@@ -106,7 +106,7 @@ server.tool(
 	"convert SVG string to PNG and upload",
 	{
 		svgString: z.string().describe("SVG content as string"),
-		fileName: z.string().describe("The file name (must be in English, .png extension will be added automatically)"),
+		fileName: z.string().describe("The file name (must be in English)"),
 		width: z.number().optional().describe("Optional width for PNG output"),
 		height: z.number().optional().describe("Optional height for PNG output"),
 	},
