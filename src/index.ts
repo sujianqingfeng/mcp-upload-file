@@ -4,8 +4,16 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { FormData, request } from "undici"
 import { z } from "zod"
-import fs from "node:fs"
 import { createRequire } from "node:module"
+import {
+	validateEnvironmentVariables,
+	getFileBuffer,
+	convertBufferToBlob,
+	parseExtraFormFields,
+	createErrorResponse,
+	createSuccessResponse,
+	convertSvgToPng,
+} from "./utils.js"
 
 const require = createRequire(import.meta.url)
 const { version: pkgVersion } = require("../package.json") as { version: string }
@@ -16,96 +24,34 @@ const server = new McpServer({
 })
 
 async function uploadFileHandler({ source, fileName }: { source: string; fileName: string }) {
-		if (
-			!process.env.UPLOAD_URL ||
-			!process.env.FILE_KEY ||
-			!process.env.FILE_NAME
-		) {
-			return {
-				content: [
-					{
-						type: "text",
-						text: "Missing required environment variables: UPLOAD_URL, FILE_KEY, FILE_NAME",
-					},
-				],
-			}
-		}
-
-		let blob: Buffer
-
-		if (source.startsWith("http://") || source.startsWith("https://")) {
-			// Fetch the file from URL
-			const response = await request(source)
-			blob = Buffer.from(await response.body.arrayBuffer())
-		} else {
-			let filePath = source
-
-			// Handle file URI scheme (e.g., "file:///path/to/file")
-			if (source.startsWith("file://")) {
-				try {
-					// Decode URI components to support spaces and non-ASCII characters
-					filePath = decodeURIComponent(new URL(source).pathname)
-				} catch {
-					// Fallback: strip the scheme manually
-					filePath = source.replace(/^file:\/\//, "")
-				}
-			}
-
-			// Read from local file system
-			if (!fs.existsSync(filePath)) {
-				return {
-					content: [
-						{
-							type: "text",
-							text: `File not found at path: ${filePath}`,
-						},
-					],
-				}
-			}
-
-			blob = fs.readFileSync(filePath)
-		}
-
-		// Prepare form data
-		const form = new FormData()
-		// Convert Buffer to Blob for FormData compatibility
-		// Use Uint8Array to ensure type compatibility across different environments
-		const fileBlob = new Blob([new Uint8Array(blob)])
-		form.append(process.env.FILE_KEY, fileBlob, fileName)
-		form.append(process.env.FILE_NAME, fileName)
-
-		// Parse and add extra form fields if provided
-		if (process.env.EXTRA_FORM) {
-			try {
-				const extraForm = JSON.parse(process.env.EXTRA_FORM)
-				for (const [key, value] of Object.entries(extraForm)) {
-					if (typeof value === "string") {
-						form.append(key, value)
-					} else {
-						form.append(key, JSON.stringify(value))
-					}
-				}
-			} catch (error) {
-				console.error("Failed to parse extra form fields:", error)
-			}
-		}
-
-		// Upload the file
-		const uploadResponse = await request(process.env.UPLOAD_URL, {
-			method: "POST",
-			body: form,
-		})
-
-		const text = await uploadResponse.body.text()
-		return {
-			content: [
-				{
-					type: "text",
-					text,
-				},
-			],
-		}
+	const envError = validateEnvironmentVariables()
+	if (envError) {
+		return createErrorResponse(envError)
 	}
+
+	const fileResult = await getFileBuffer(source)
+	if (!fileResult.success) {
+		return createErrorResponse(fileResult.error)
+	}
+
+	const form = new FormData()
+	const fileBlob = convertBufferToBlob(fileResult.buffer)
+	form.append(process.env.FILE_KEY!, fileBlob, fileName)
+	form.append(process.env.FILE_NAME!, fileName)
+
+	const extraFields = parseExtraFormFields(process.env.EXTRA_FORM)
+	for (const [key, value] of Object.entries(extraFields)) {
+		form.append(key, value)
+	}
+
+	const uploadResponse = await request(process.env.UPLOAD_URL!, {
+		method: "POST",
+		body: form,
+	})
+
+	const text = await uploadResponse.body.text()
+	return createSuccessResponse(text)
+}
 
 server.tool(
 	"upload-file",
@@ -115,6 +61,56 @@ server.tool(
 		fileName: z.string().describe("The file name (must be in English)"),
 	},
 	uploadFileHandler as any,
+)
+
+async function uploadSvgHandler({ svgString, fileName, width, height }: { 
+	svgString: string; 
+	fileName: string; 
+	width?: number; 
+	height?: number; 
+}) {
+	const envError = validateEnvironmentVariables()
+	if (envError) {
+		return createErrorResponse(envError)
+	}
+
+	try {
+		const pngBuffer = convertSvgToPng(svgString, width, height)
+		
+		const form = new FormData()
+		const fileBlob = convertBufferToBlob(pngBuffer)
+		const pngFileName = fileName.replace(/\.svg$/i, '.png')
+		
+		form.append(process.env.FILE_KEY!, fileBlob, pngFileName)
+		form.append(process.env.FILE_NAME!, pngFileName)
+
+		const extraFields = parseExtraFormFields(process.env.EXTRA_FORM)
+		for (const [key, value] of Object.entries(extraFields)) {
+			form.append(key, value)
+		}
+
+		const uploadResponse = await request(process.env.UPLOAD_URL!, {
+			method: "POST",
+			body: form,
+		})
+
+		const text = await uploadResponse.body.text()
+		return createSuccessResponse(text)
+	} catch (error) {
+		return createErrorResponse(`Failed to convert SVG to PNG: ${error}`)
+	}
+}
+
+server.tool(
+	"upload-svg",
+	"convert SVG string to PNG and upload",
+	{
+		svgString: z.string().describe("SVG content as string"),
+		fileName: z.string().describe("The file name (must be in English, .png extension will be added automatically)"),
+		width: z.number().optional().describe("Optional width for PNG output"),
+		height: z.number().optional().describe("Optional height for PNG output"),
+	},
+	uploadSvgHandler as any,
 )
 
 async function main() {
@@ -131,4 +127,4 @@ if (!process.env.SKIP_MCP_MAIN) {
 	})
 }
 
-export { server, uploadFileHandler }
+export { server, uploadFileHandler, uploadSvgHandler }
