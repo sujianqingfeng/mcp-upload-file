@@ -1,6 +1,6 @@
 import { request } from "undici"
 import fs from "node:fs"
-import { Resvg } from "@resvg/resvg-js"
+import sharp from "sharp"
 
 export interface FileSource {
 	buffer: Buffer
@@ -112,14 +112,28 @@ export function createSuccessResponse(text: string) {
 	}
 }
 
-export function convertSvgToPng(svgString: string, width?: number, height?: number): Buffer {
-	const resvg = new Resvg(svgString, {
-		fitTo: width && height ? {
-			mode: "width",
-			value: width
-		} : undefined,
-	})
-
-	const pngData = resvg.render()
-	return Buffer.from(pngData.asPng())
+export async function convertSvgToPng(svgString: string, width?: number, height?: number): Promise<Buffer> {
+	try {
+		const svgBuffer = Buffer.from(svgString, 'utf8')
+		
+		let sharpInstance = sharp(svgBuffer)
+		
+		if (width || height) {
+			sharpInstance = sharpInstance.resize(width, height, {
+				fit: 'contain',
+				background: { r: 0, g: 0, b: 0, alpha: 0 }
+			})
+		}
+		
+		const pngBuffer = await sharpInstance
+			.png({ 
+				compressionLevel: 6,
+				adaptiveFiltering: true 
+			})
+			.toBuffer()
+		
+		return pngBuffer
+	} catch (error) {
+		throw new Error(`Failed to convert SVG to PNG: ${error}`)
+	}
 }

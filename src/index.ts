@@ -75,7 +75,7 @@ async function uploadSvgHandler({ svgString, fileName, width, height }: {
 	}
 
 	try {
-		const pngBuffer = convertSvgToPng(svgString, width, height)
+		const pngBuffer = await convertSvgToPng(svgString, width, height)
 		
 		const form = new FormData()
 		const fileBlob = convertBufferToBlob(pngBuffer)

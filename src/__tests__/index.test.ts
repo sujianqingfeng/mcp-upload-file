@@ -205,7 +205,7 @@ describe("uploadFileHandler", () => {
 			// Import the utility function directly to test PNG generation
 			const { convertSvgToPng } = await import("../utils.js")
 			
-			const pngBuffer = convertSvgToPng(complexSvgString, size.width, size.height)
+			const pngBuffer = await convertSvgToPng(complexSvgString, size.width, size.height)
 			
 			// Save the generated PNG file for visual inspection
 			const outputPath = path.join(__dirname, `test-output-${size.suffix}.png`)
