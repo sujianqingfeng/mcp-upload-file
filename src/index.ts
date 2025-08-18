@@ -102,7 +102,7 @@ async function uploadSvgHandler({ svgString, fileName, width, height }: {
 }
 
 server.tool(
-	"upload-svg",
+	"upload-svg-file",
 	"convert SVG string to PNG and upload",
 	{
 		svgString: z.string().describe("SVG content as string"),
